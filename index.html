@@ -10,7 +10,7 @@
 
   <style>
     :root {
-      --bg-gradient: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 50%, #fbc2eb 100%);
+      --bg-gradient: radial-gradient(circle at top left, #ff9a9e 0%, #fad0c4 40%, #fbc2eb 100%);
       --card-bg: rgba(255, 255, 255, 0.18);
       --card-border: rgba(255, 255, 255, 0.4);
       --accent: #ff5c9a;
@@ -28,6 +28,10 @@
       padding: 0;
     }
 
+    html, body {
+      height: 100%;
+    }
+
     body {
       font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", sans-serif;
       background: var(--bg-gradient);
@@ -36,12 +40,22 @@
       display: flex;
       justify-content: center;
       padding: 32px 16px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Three.js 背景 canvas 容器 */
+    #three-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
     }
 
     .app-shell {
       width: 100%;
       max-width: 1080px;
-      background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.15));
+      background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.12));
       border-radius: 32px;
       box-shadow: var(--shadow-soft);
       border: 1px solid rgba(255, 255, 255, 0.7);
@@ -57,7 +71,7 @@
       height: 160px;
       border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #ffe6f0, rgba(255, 255, 255, 0));
-      opacity: 0.7;
+      opacity: 0.6;
       filter: blur(1px);
       pointer-events: none;
       animation: floatHeart 14s ease-in-out infinite alternate;
@@ -121,7 +135,7 @@
       gap: 8px;
       padding: 10px 16px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.8);
       border: 1px solid rgba(255, 255, 255, 0.9);
       box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
     }
@@ -553,6 +567,9 @@
   </style>
 </head>
 <body>
+  <!-- Three.js 背景容器 -->
+  <div id="three-bg"></div>
+
   <div class="app-shell">
     <div class="floating-heart h1"></div>
     <div class="floating-heart h2"></div>
@@ -571,7 +588,7 @@
     </header>
 
     <main class="sections">
-      <!-- 左側：首頁 + 時間軸 -->
+      <!-- 左：首頁 -->
       <section class="card">
         <div class="card-header">
           <div class="card-title">
@@ -588,7 +605,6 @@
             <div
               class="avatar-circle"
               style="background-image: url('assets/cover.jpg');"
-              title="TODO 換成你們的合照"
             ></div>
             <div class="hero-caption">
               這裡以後可以放我們的合照、旅遊照，慢慢累積成一個專屬我們的相簿。
@@ -606,7 +622,7 @@
         </div>
       </section>
 
-      <!-- 右側：我愛妳的理由 + 願望清單 -->
+      <!-- 右：我愛妳的理由 -->
       <section class="card">
         <div class="card-header">
           <div class="card-title">
@@ -662,7 +678,7 @@
         </div>
       </section>
 
-      <!-- 左側第二排：Love Timeline -->
+      <!-- 左：時間軸 -->
       <section class="card">
         <div class="card-header">
           <div class="card-title">
@@ -703,7 +719,7 @@
         </div>
       </section>
 
-      <!-- 右側第二排：Console 風格告白 -->
+      <!-- 右：Dev console 告白 -->
       <section class="card">
         <div class="card-header">
           <div class="card-title">
@@ -761,6 +777,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
 
   <script>
     // TODO: 把這個日期改成你們「在一起」的日子（格式：YYYY-MM-DD）
@@ -852,10 +871,92 @@
       spawnHearts();
     });
 
+    // ===== Three.js 3D 愛心背景 =====
+    function initThreeBg() {
+      const container = document.getElementById("three-bg");
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        100
+      );
+      camera.position.z = 6;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+      scene.add(ambient);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(3, 4, 5);
+      scene.add(dirLight);
+
+      const heartShape = new THREE.Shape();
+      const x = 0, y = 0;
+      heartShape.moveTo(x + 0, y + 0);
+      heartShape.bezierCurveTo(x + 0, y - 0.5, x - 1.2, y - 0.5, x - 1.2, y + 0.3);
+      heartShape.bezierCurveTo(x - 1.2, y + 1.1, x - 0.3, y + 1.7, x + 0, y + 2.1);
+      heartShape.bezierCurveTo(x + 0.3, y + 1.7, x + 1.2, y + 1.1, x + 1.2, y + 0.3);
+      heartShape.bezierCurveTo(x + 1.2, y - 0.5, x + 0, y - 0.5, x + 0, y + 0);
+
+      const extrudeSettings = {
+        depth: 0.6,
+        bevelEnabled: true,
+        bevelSegments: 10,
+        steps: 2,
+        bevelSize: 0.25,
+        bevelThickness: 0.25
+      };
+
+      const geometry = new THREE.ExtrudeGeometry(heartShape, extrudeSettings);
+      geometry.center();
+
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xff5c9a,
+        metalness: 0.3,
+        roughness: 0.25,
+        emissive: 0x220010,
+        emissiveIntensity: 0.35
+      });
+
+      const heartMesh = new THREE.Mesh(geometry, material);
+      heartMesh.scale.set(1.4, 1.4, 1.4);
+      heartMesh.position.set(0.2, 0.4, 0);
+      scene.add(heartMesh);
+
+      const bgGeo = new THREE.SphereGeometry(30, 32, 32);
+      const bgMat = new THREE.MeshBasicMaterial({
+        color: 0xffc1e3,
+        side: THREE.BackSide
+      });
+      const bg = new THREE.Mesh(bgGeo, bgMat);
+      scene.add(bg);
+
+      function onResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+      window.addEventListener("resize", onResize);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        heartMesh.rotation.y += 0.01;
+        heartMesh.rotation.x = Math.sin(Date.now() * 0.0004) * 0.2 + 0.2;
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+
     window.addEventListener("DOMContentLoaded", () => {
       calculateDaysTogether();
       setupWishList();
       pickRandomReason();
+      initThreeBg();
     });
   </script>
 </body>
