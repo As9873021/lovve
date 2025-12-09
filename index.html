@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>我們的 LINE 情侶照片牆</title>
 
-  <!-- LIFF v2 SDK 官方 CDN [web:45] -->
+  <!-- LIFF v2 SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -31,7 +31,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
     }
     .avatar {
       width: 42px;
@@ -62,77 +62,13 @@
     .status {
       font-size: 11px;
       color: #888;
-      margin-bottom: 8px;
-    }
-
-    .upload-box {
-      border: 2px dashed #ff9eb5;
-      border-radius: 12px;
-      padding: 14px;
-      text-align: center;
-      background: #fff7fb;
-      margin-bottom: 14px;
-    }
-    .upload-box input[type="file"] {
-      display: none;
-    }
-    .upload-label {
-      display: inline-block;
-      padding: 8px 16px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #ff7aa2, #ff9eb5);
-      color: #fff;
-      font-size: 13px;
-      cursor: pointer;
       margin-bottom: 4px;
     }
-    .upload-box small {
-      display: block;
-      font-size: 11px;
-      color: #666;
+    .year-label {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 8px;
     }
-
-    .preview {
-      display: none;
-      margin-top: 12px;
-      text-align: left;
-    }
-    .preview img {
-      max-width: 180px;
-      border-radius: 12px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-      display: block;
-      margin-bottom: 6px;
-    }
-    .preview textarea {
-      width: 100%;
-      min-height: 52px;
-      border-radius: 10px;
-      border: 1px solid #ffbfd1;
-      padding: 6px;
-      font-size: 12px;
-      resize: vertical;
-      outline: none;
-    }
-    .preview textarea:focus {
-      border-color: #ff7aa2;
-      box-shadow: 0 0 0 2px rgba(255,122,162,0.2);
-    }
-    .preview button {
-      margin-top: 6px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      border: none;
-      background: #ff7aa2;
-      color: #fff;
-      font-size: 12px;
-      cursor: pointer;
-    }
-    .preview button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -172,6 +108,12 @@
       background: #ffe5ec;
       color: #c2527b;
     }
+    .empty {
+      font-size: 13px;
+      color: #777;
+      text-align: center;
+      margin-top: 12px;
+    }
   </style>
 </head>
 <body>
@@ -185,44 +127,36 @@
     </div>
 
     <div class="status" id="status"></div>
-
-    <div class="upload-box">
-      <label class="upload-label" for="file-input">＋ 新增照片</label>
-      <input id="file-input" type="file" accept="image/*" />
-      <small>請從 LINE App 裡開啟，支援手機拍照或從相簿選擇圖片。</small>
-
-      <div class="preview" id="preview">
-        <img id="preview-img" alt="預覽圖片" />
-        <textarea id="preview-text" placeholder="想寫一句話給對方嗎？（可空白）"></textarea>
-        <button id="add-btn" disabled>加入照片牆</button>
-      </div>
-    </div>
+    <div class="year-label" id="year-label"></div>
 
     <div class="grid" id="photo-grid"></div>
+    <div class="empty" id="empty-msg" style="display:none;">這一年還沒有任何照片。</div>
   </div>
 
   <script>
-    // 把這裡換成你後台看到的 LIFF ID [web:45][web:90]
-    const LIFF_ID = '2008662868-yAm8omQe';
+    // 這兩個是你要用的實際設定
+    const LIFF_ID  = '2008662868-yAm8omQe';
+    const API_BASE = 'https://pipier-southward-niesha.ngrok-free.dev';
 
-    const avatarDiv = document.getElementById('avatar');
+    const avatarDiv  = document.getElementById('avatar');
     const subtitleEl = document.getElementById('subtitle');
-    const statusEl = document.getElementById('status');
-    const fileInput = document.getElementById('file-input');
-    const preview = document.getElementById('preview');
-    const previewImg = document.getElementById('preview-img');
-    const previewText = document.getElementById('preview-text');
-    const addBtn = document.getElementById('add-btn');
-    const photoGrid = document.getElementById('photo-grid');
+    const statusEl   = document.getElementById('status');
+    const yearLabel  = document.getElementById('year-label');
+    const photoGrid  = document.getElementById('photo-grid');
+    const emptyMsg   = document.getElementById('empty-msg');
 
-    let currentImageUrl = null;
-    let currentUser = null;
+    function getYearFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const y = params.get('year');
+      const now = new Date().getFullYear().toString();
+      return /^\d{4}$/.test(y) ? y : now;
+    }
 
-    async function initLiff() {
+    async function initLiffAndLoad() {
       try {
         statusEl.textContent = '初始化 LIFF 中...';
 
-        await liff.init({ liffId: LIFF_ID }); // 官方文件建議的初始化方式。[web:45][web:90]
+        await liff.init({ liffId: LIFF_ID });
 
         if (!liff.isLoggedIn()) {
           statusEl.textContent = '尚未登入 LINE，導向登入頁面...';
@@ -230,10 +164,8 @@
           return;
         }
 
-        const profile = await liff.getProfile(); // 取得 userId、displayName、pictureUrl。[web:27][web:95]
-        currentUser = profile;
-
-        subtitleEl.textContent = `嗨，${profile.displayName}，一起記錄你們的回憶吧 💕`;
+        const profile = await liff.getProfile();
+        subtitleEl.textContent = `嗨，${profile.displayName}，一起看你們的回憶吧 💕`;
         statusEl.textContent = '已從 LINE 取得你的身份資訊。';
 
         if (profile.pictureUrl) {
@@ -243,69 +175,76 @@
           avatarDiv.appendChild(img);
         }
 
+        const year = getYearFromUrl();
+        yearLabel.textContent = `目前顯示：${year} 年的相簿`;
+        await loadPhotos(year);
       } catch (err) {
         console.error(err);
-        statusEl.textContent = 'LIFF 初始化失敗，請確認 LIFF ID 與後台設定是否正確。';
+        statusEl.textContent = 'LIFF 初始化失敗，請確認設定是否正確。';
       }
     }
 
-    // 本地圖片預覽（不上傳伺服器）[web:101][web:20]
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+    async function loadPhotos(year) {
+      statusEl.textContent = '讀取相簿中...';
+      photoGrid.innerHTML = '';
+      emptyMsg.style.display = 'none';
 
-      const url = URL.createObjectURL(file);
-      currentImageUrl = url;
-      previewImg.src = url;
-      preview.style.display = 'block';
-      addBtn.disabled = false;
-    });
+      try {
+        const res = await fetch(`${API_BASE}/photos?year=${encodeURIComponent(year)}`);
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        const photos = data.photos || [];
 
-    addBtn.addEventListener('click', () => {
-      if (!currentImageUrl) return;
+        if (photos.length === 0) {
+          emptyMsg.style.display = 'block';
+          statusEl.textContent = '這一年目前沒有照片。';
+          return;
+        }
 
-      const text = previewText.value.trim();
-      const card = document.createElement('div');
-      card.className = 'card';
+        photos
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .forEach((p) => {
+            const card = document.createElement('div');
+            card.className = 'card';
 
-      const img = document.createElement('img');
-      img.src = currentImageUrl;
+            const img = document.createElement('img');
+            img.src = p.url;
 
-      const textDiv = document.createElement('div');
-      textDiv.className = 'card-text';
-      textDiv.textContent = text || '（什麼都沒寫，但還是很甜。）';
+            const textDiv = document.createElement('div');
+            textDiv.className = 'card-text';
+            textDiv.textContent = p.text || '（還沒有備註。）';
 
-      const meta = document.createElement('div');
-      meta.className = 'card-meta';
+            const meta = document.createElement('div');
+            meta.className = 'card-meta';
 
-      const dateSpan = document.createElement('span');
-      const now = new Date();
-      dateSpan.textContent = now.toLocaleString();
+            const d = new Date(p.createdAt);
+            const dateSpan = document.createElement('span');
+            dateSpan.textContent = d.toLocaleString();
 
-      const tag = document.createElement('span');
-      tag.className = 'tag';
-      tag.textContent = currentUser
-        ? `${currentUser.displayName} 的回憶`
-        : '我們的回憶';
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = `${year} 的回憶`;
 
-      meta.appendChild(dateSpan);
-      meta.appendChild(tag);
+            meta.appendChild(dateSpan);
+            meta.appendChild(tag);
 
-      card.appendChild(img);
-      card.appendChild(textDiv);
-      card.appendChild(meta);
+            card.appendChild(img);
+            card.appendChild(textDiv);
+            card.appendChild(meta);
 
-      photoGrid.prepend(card);
+            photoGrid.appendChild(card);
+          });
 
-      // 清空預覽
-      previewText.value = '';
-      preview.style.display = 'none';
-      addBtn.disabled = true;
-      currentImageUrl = null;
-      fileInput.value = '';
-    });
+        statusEl.textContent = `共 ${photos.length} 張照片。`;
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = '讀取相簿失敗，請稍後再試。';
+        emptyMsg.style.display = 'block';
+        emptyMsg.textContent = '讀取相簿失敗，請稍後再試。';
+      }
+    }
 
-    document.addEventListener('DOMContentLoaded', initLiff);
+    document.addEventListener('DOMContentLoaded', initLiffAndLoad);
   </script>
 </body>
 </html>
