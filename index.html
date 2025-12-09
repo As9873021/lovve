@@ -2,962 +2,310 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>給妳的秘密小宇宙 💖</title>
+  <title>我們的 LINE 情侶照片牆</title>
+
+  <!-- LIFF v2 SDK 官方 CDN [web:45] -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet" />
-
   <style>
-    :root {
-      --bg-gradient: radial-gradient(circle at top left, #ff9a9e 0%, #fad0c4 40%, #fbc2eb 100%);
-      --card-bg: rgba(255, 255, 255, 0.18);
-      --card-border: rgba(255, 255, 255, 0.4);
-      --accent: #ff5c9a;
-      --accent-soft: rgba(255, 92, 154, 0.2);
-      --text-main: #3c3c3c;
-      --text-light: #ffffff;
-      --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.18);
-      --radius-xl: 24px;
-      --transition-fast: 0.25s ease;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body {
-      height: 100%;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", sans-serif;
-      background: var(--bg-gradient);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #ffe5ec, #fff0f5);
       min-height: 100vh;
-      color: var(--text-main);
+      padding: 16px;
       display: flex;
       justify-content: center;
-      padding: 32px 16px;
-      position: relative;
-      overflow-x: hidden;
     }
-
-    /* Three.js 背景 canvas 容器 */
-    #three-bg {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-    }
-
-    .app-shell {
+    .app {
       width: 100%;
-      max-width: 1080px;
-      background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.12));
-      border-radius: 32px;
-      box-shadow: var(--shadow-soft);
-      border: 1px solid rgba(255, 255, 255, 0.7);
-      padding: 24px;
-      backdrop-filter: blur(18px);
-      position: relative;
-      overflow: hidden;
+      max-width: 900px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
     }
-
-    .floating-heart {
-      position: absolute;
-      width: 160px;
-      height: 160px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #ffe6f0, rgba(255, 255, 255, 0));
-      opacity: 0.6;
-      filter: blur(1px);
-      pointer-events: none;
-      animation: floatHeart 14s ease-in-out infinite alternate;
-    }
-    .floating-heart.h1 { top: -40px; left: -40px; }
-    .floating-heart.h2 { bottom: -30px; right: -30px; animation-duration: 18s; }
-
-    @keyframes floatHeart {
-      0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.8; }
-      100% { transform: translate3d(40px, -20px, 0) scale(1.15); opacity: 0.4; }
-    }
-
-    header {
+    .header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 24px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .title-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .subtitle {
-      font-size: 14px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: rgba(60, 60, 60, 0.7);
-    }
-
-    h1 {
-      font-size: clamp(24px, 4vw, 30px);
-      font-weight: 700;
-      color: var(--text-main);
-    }
-
-    .name-highlight {
-      color: var(--accent);
-      position: relative;
-    }
-    .name-highlight::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: -4px;
-      width: 100%;
-      height: 6px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(255, 92, 154, 0.3), rgba(255, 255, 255, 0));
-      pointer-events: none;
-    }
-
-    .relationship-meta {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 16px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.9);
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
-    }
-
-    .meta-label {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      color: rgba(60, 60, 60, 0.7);
-    }
-
-    .meta-days {
-      font-weight: 700;
-      font-size: 18px;
-      color: var(--accent);
-      display: flex;
-      align-items: baseline;
-      gap: 4px;
-    }
-
-    .meta-days span {
-      font-size: 13px;
-      font-weight: 400;
-      color: rgba(60, 60, 60, 0.75);
-    }
-
-    .sections {
-      display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
-      gap: 20px;
-      position: relative;
-      z-index: 1;
-    }
-
-    @media (max-width: 900px) {
-      .sections {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    .card {
-      background: var(--card-bg);
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--card-border);
-      padding: 18px 18px 16px;
-      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.12);
-      backdrop-filter: blur(18px);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-      gap: 8px;
-    }
-
-    .card-title {
-      font-size: 16px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .pill {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.7);
-      background: rgba(255, 255, 255, 0.8);
-      color: rgba(60, 60, 60, 0.7);
-    }
-
-    .pill-accent {
-      background: rgba(255, 92, 154, 0.16);
-      border-color: rgba(255, 92, 154, 0.5);
-      color: var(--accent);
-    }
-
-    .card-body {
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    .hero-message {
-      margin-bottom: 12px;
-      font-size: 15px;
-    }
-
-    .hero-highlight {
-      font-weight: 600;
-      color: var(--accent);
-    }
-
-    .hero-photo {
-      margin-top: 8px;
-      display: flex;
       gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
+      margin-bottom: 16px;
     }
-
-    .avatar-circle {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background-position: center;
-      background-size: cover;
-      background-repeat: no-repeat;
-      border: 2px solid rgba(255, 255, 255, 0.9);
-      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16);
-    }
-
-    .hero-caption {
-      font-size: 13px;
-      color: rgba(60, 60, 60, 0.75);
-    }
-
-    button {
-      border: none;
-      outline: none;
-      cursor: pointer;
-      font-family: inherit;
-    }
-
-    .btn {
-      font-size: 13px;
-      padding: 8px 14px;
+    .avatar {
+      width: 42px;
+      height: 42px;
       border-radius: 999px;
-      border: 1px solid transparent;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), border var(--transition-fast), color var(--transition-fast);
-      background: rgba(255, 255, 255, 0.9);
-      color: var(--text-main);
-      box-shadow: 0 9px 18px rgba(0, 0, 0, 0.12);
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #ff5c9a, #ff758c);
-      color: var(--text-light);
-      border-color: rgba(255, 255, 255, 0.85);
-    }
-
-    .btn-outline {
-      background: transparent;
-      border-color: rgba(255, 255, 255, 0.9);
-      color: rgba(60, 60, 60, 0.85);
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-      box-shadow: 0 7px 14px rgba(0, 0, 0, 0.14);
-    }
-
-    .timeline {
-      margin-top: 4px;
+      background: #ffd1e3;
+      overflow: hidden;
+      flex-shrink: 0;
       display: flex;
-      flex-direction: column;
-      gap: 10px;
-      position: relative;
-      padding-left: 10px;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #fff;
     }
-
-    .timeline::before {
-      content: "";
-      position: absolute;
-      left: 4px;
-      top: 4px;
-      bottom: 4px;
-      width: 2px;
-      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
-
-    .timeline-item {
-      position: relative;
-      padding-left: 18px;
-      padding-right: 6px;
-    }
-
-    .timeline-dot {
-      position: absolute;
-      left: -2px;
-      top: 6px;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #fff;
-      border: 2px solid var(--accent);
-      box-shadow: 0 0 0 6px var(--accent-soft);
-    }
-
-    .timeline-date {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      color: rgba(60, 60, 60, 0.65);
+    .header-text h1 {
+      font-size: 20px;
       margin-bottom: 2px;
     }
-
-    .timeline-title {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .timeline-note {
+    .header-text p {
       font-size: 12px;
-      color: rgba(60, 60, 60, 0.8);
-      margin-top: 1px;
+      color: #666;
     }
-
-    .reasons-box {
-      margin-top: 4px;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 16px;
-      padding: 10px 12px;
-      border: 1px solid rgba(255, 255, 255, 0.9);
-      min-height: 52px;
-      display: flex;
-      align-items: center;
-      font-size: 14px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .reasons-label {
+    .status {
       font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      color: rgba(60, 60, 60, 0.7);
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .upload-box {
+      border: 2px dashed #ff9eb5;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+      background: #fff7fb;
+      margin-bottom: 14px;
+    }
+    .upload-box input[type="file"] {
+      display: none;
+    }
+    .upload-label {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ff7aa2, #ff9eb5);
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
       margin-bottom: 4px;
     }
-
-    .reasons-text {
-      animation: fadeIn 0.3s ease-out;
+    .upload-box small {
+      display: block;
+      font-size: 11px;
+      color: #666;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(2px); }
-      to { opacity: 1; transform: translateY(0); }
+    .preview {
+      display: none;
+      margin-top: 12px;
+      text-align: left;
+    }
+    .preview img {
+      max-width: 180px;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      display: block;
+      margin-bottom: 6px;
+    }
+    .preview textarea {
+      width: 100%;
+      min-height: 52px;
+      border-radius: 10px;
+      border: 1px solid #ffbfd1;
+      padding: 6px;
+      font-size: 12px;
+      resize: vertical;
+      outline: none;
+    }
+    .preview textarea:focus {
+      border-color: #ff7aa2;
+      box-shadow: 0 0 0 2px rgba(255,122,162,0.2);
+    }
+    .preview button {
+      margin-top: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: none;
+      background: #ff7aa2;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .preview button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
-    .wish-list {
-      list-style: none;
-      margin-top: 8px;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
-
-    .wish-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.94);
-      border: 1px solid rgba(255, 255, 255, 0.9);
-      font-size: 13px;
-    }
-
-    .wish-item input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      cursor: pointer;
-      accent-color: var(--accent);
-    }
-
-    .wish-item.done {
-      text-decoration: line-through;
-      color: rgba(60, 60, 60, 0.5);
-      background: rgba(255, 255, 255, 0.8);
-    }
-
-    .console-chat {
-      font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      background: #12121f;
-      color: #e4e4ff;
-      border-radius: 16px;
-      padding: 10px 12px;
-      font-size: 12px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .console-line {
-      white-space: pre-wrap;
-      word-break: break-word;
-      line-height: 1.5;
-    }
-
-    .console-prefix {
-      color: #7dd3fc;
-    }
-
-    .console-highlight {
-      color: #fb7185;
-      font-weight: 600;
-    }
-
-    .footer-note {
-      margin-top: 12px;
-      font-size: 11px;
-      color: rgba(60, 60, 60, 0.7);
-      text-align: right;
-    }
-
-    .footer-note span {
-      font-weight: 600;
-      color: var(--accent);
-    }
-
-    .secret-toggle {
-      margin-top: 10px;
-    }
-
-    .secret-toggle span {
-      font-size: 12px;
-      color: rgba(60, 60, 60, 0.8);
-    }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.32);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-      padding: 16px;
-    }
-
-    .modal-backdrop.show {
-      display: flex;
-    }
-
-    .modal {
-      background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9));
-      border-radius: 24px;
-      padding: 18px 18px 14px;
-      max-width: 360px;
+    .card img {
       width: 100%;
-      box-shadow: 0 18px 46px rgba(0, 0, 0, 0.32);
-      border: 1px solid rgba(255, 255, 255, 0.9);
-      animation: modalPop 0.22s ease-out;
+      border-radius: 10px;
+      object-fit: cover;
+      max-height: 180px;
     }
-
-    @keyframes modalPop {
-      from { opacity: 0; transform: translateY(6px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+    .card-text {
+      font-size: 12px;
+      color: #444;
+      white-space: pre-wrap;
     }
-
-    .modal-title {
-      font-size: 15px;
-      font-weight: 600;
-      margin-bottom: 6px;
+    .card-meta {
+      font-size: 10px;
+      color: #999;
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 6px;
     }
-
-    .modal-body {
-      font-size: 14px;
-      line-height: 1.7;
-      color: #3f3f3f;
-      margin-bottom: 10px;
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    .hearts-layer {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      overflow: hidden;
-      z-index: 40;
-    }
-
-    .heart-confetti {
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      background: radial-gradient(circle at 30% 30%, #fff, #ff5c9a);
-      transform: rotate(45deg);
-      border-radius: 4px 4px 0 4px;
-      opacity: 0.9;
-      animation: fall 5s linear infinite;
-    }
-
-    .heart-confetti::after,
-    .heart-confetti::before {
-      content: "";
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      background: radial-gradient(circle at 30% 30%, #fff, #ff5c9a);
-      border-radius: 50%;
-    }
-
-    .heart-confetti::before {
-      top: -8px;
-      left: 0;
-    }
-
-    .heart-confetti::after {
-      left: -8px;
-      top: 0;
-    }
-
-    @keyframes fall {
-      0% { transform: translate3d(0, -20vh, 0) rotate(0deg); opacity: 0.9; }
-      100% { transform: translate3d(0, 100vh, 0) rotate(340deg); opacity: 0; }
+    .tag {
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 10px;
+      background: #ffe5ec;
+      color: #c2527b;
     }
   </style>
 </head>
 <body>
-  <!-- Three.js 背景容器 -->
-  <div id="three-bg"></div>
-
-  <div class="app-shell">
-    <div class="floating-heart h1"></div>
-    <div class="floating-heart h2"></div>
-
-    <header>
-      <div class="title-wrap">
-        <div class="subtitle">FOR <span class="name-highlight">TODO_女友名字</span></div>
-        <h1>給妳的秘密小宇宙 💌</h1>
-      </div>
-      <div class="relationship-meta">
-        <div class="meta-label">我們在一起已經</div>
-        <div class="meta-days" id="days-counter">
-          0<span>天</span>
-        </div>
-      </div>
-    </header>
-
-    <main class="sections">
-      <!-- 左：首頁 -->
-      <section class="card">
-        <div class="card-header">
-          <div class="card-title">
-            ✨ 專屬妳的首頁
-          </div>
-          <div class="pill pill-accent">完全客製</div>
-        </div>
-        <div class="card-body">
-          <div class="hero-message">
-            親愛的 <span class="hero-highlight">TODO_暱稱</span>，這個小小的網站，是只屬於妳的收藏夾。  
-            不用登入、不用註冊，只要妳打開，它就會乖乖在這裡等妳。
-          </div>
-          <div class="hero-photo">
-            <div
-              class="avatar-circle"
-              style="background-image: url('assets/cover.jpg');"
-            ></div>
-            <div class="hero-caption">
-              這裡以後可以放我們的合照、旅遊照，慢慢累積成一個專屬我們的相簿。
-            </div>
-          </div>
-
-          <div style="margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn btn-primary" id="secretBtn">
-              🔐 解鎖一段偷偷寫給妳的話
-            </button>
-            <button class="btn btn-outline" id="celebrateBtn">
-              🎉 撒滿整個畫面的愛心
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- 右：我愛妳的理由 -->
-      <section class="card">
-        <div class="card-header">
-          <div class="card-title">
-            💗 我喜歡妳的很多理由
-          </div>
-          <div class="pill">Random Love API</div>
-        </div>
-        <div class="card-body">
-          <div class="reasons-label">隨機抽一個理由</div>
-          <div class="reasons-box">
-            <div id="reasonText" class="reasons-text">
-              按下下面的按鈕，妳每次都可以抽到一個新的理由。
-            </div>
-          </div>
-          <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center;">
-            <button class="btn btn-primary" id="nextReasonBtn">
-              💌 再聽一個
-            </button>
-            <span style="font-size: 11px; color: rgba(60,60,60,.7);">
-              （這個清單會一直被我偷偷更新）
-            </span>
-          </div>
-
-          <hr style="border: none; border-top: 1px dashed rgba(255,255,255,0.7); margin: 12px 0;" />
-
-          <div class="card-header" style="padding: 0; margin-bottom: 6px;">
-            <div class="card-title" style="font-size: 14px;">
-              🌈 未來想跟妳一起做的事
-            </div>
-          </div>
-          <ul class="wish-list" id="wishList">
-            <li class="wish-item">
-              <input type="checkbox" />
-              <span>一起去 <strong>TODO_你們想去的城市</strong> 看夜景</span>
-            </li>
-            <li class="wish-item">
-              <input type="checkbox" />
-              <span>找一天完全不看手機，只陪妳發呆聊天</span>
-            </li>
-            <li class="wish-item">
-              <input type="checkbox" />
-              <span>帶妳去吃那家妳一直說想試試看的餐廳</span>
-            </li>
-            <li class="wish-item">
-              <input type="checkbox" />
-              <span>某一個普通的星期二，突然帶妳去看電影</span>
-            </li>
-          </ul>
-
-          <div class="secret-toggle">
-            <span>之後如果妳也想新增想做的事，可以跟我說，我會幫妳加進來。</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- 左：時間軸 -->
-      <section class="card">
-        <div class="card-header">
-          <div class="card-title">
-            🕰 Love Timeline
-          </div>
-          <div class="pill">Milestones</div>
-        </div>
-        <div class="card-body">
-          <p style="font-size: 13px; margin-bottom: 6px;">
-            這裡是我們的時間軸，之後可以慢慢往下延伸，變成一整條只屬於我們的故事線。
-          </p>
-          <div class="timeline">
-            <div class="timeline-item">
-              <div class="timeline-dot"></div>
-              <div class="timeline-date">TODO_第一次聊天的日期</div>
-              <div class="timeline-title">第一次出現在彼此的世界裡</div>
-              <div class="timeline-note">
-                那天如果我沒有回妳那一句訊息，現在的我應該會後悔一輩子。
-              </div>
-            </div>
-            <div class="timeline-item">
-              <div class="timeline-dot"></div>
-              <div class="timeline-date">TODO_第一次見面的日期</div>
-              <div class="timeline-title">第一次見面</div>
-              <div class="timeline-note">
-                妳一出現，我就知道，「啊，完蛋了，我會很喜歡這個人」。
-              </div>
-            </div>
-            <div class="timeline-item">
-              <div class="timeline-dot"></div>
-              <div class="timeline-date">TODO_在一起的日期</div>
-              <div class="timeline-title">Officially 在一起</div>
-              <div class="timeline-note">
-                那天之後，每一個白天、每一個晚上，都多了一個我一直惦記著的人。
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 右：Dev console 告白 -->
-      <section class="card">
-        <div class="card-header">
-          <div class="card-title">
-            🧠 開發者模式的我
-          </div>
-          <div class="pill">Dev Console</div>
-        </div>
-        <div class="card-body">
-          <p style="font-size: 13px; margin-bottom: 6px;">
-            這是專門寫給會偷看 console 的妳。沒人看得懂，但我知道妳一定會看到。
-          </p>
-          <div class="console-chat">
-            <div class="console-line">
-              <span class="console-prefix">>_</span>
-              <span> booting <span class="console-highlight">love.app()</span> for <span class="console-highlight">TODO_女友名字</span>...</span>
-            </div>
-            <div class="console-line">
-              <span class="console-prefix">>_</span>
-              <span> status: <span class="console-highlight">always_thinking_of_you</span></span>
-            </div>
-            <div class="console-line">
-              <span class="console-prefix">>_</span>
-              <span> tip: 如果妳現在真的有在看 console ，代表妳真的很可愛。</span>
-            </div>
-          </div>
-          <div class="footer-note">
-            made with way too much <span>愛</span> by TODO_你的名字
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- 愛心雨 -->
-  <div class="hearts-layer" id="heartsLayer"></div>
-
-  <!-- 秘密訊息 Modal -->
-  <div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal">
-      <div class="modal-title">
-        💖 給妳的小小專屬訊息
-      </div>
-      <div class="modal-body">
-        其實這個網站的每一個字、每一個顏色、每一個小動畫，  
-        都是因為有妳，我才會想要做出來。  
-        以後如果妳哪天心情不好、覺得很累，可以回來這裡，  
-        至少這裡會一直提醒妳：  
-        <br /><br />
-        —— 有一個人，永遠把妳放在心裡很重要的那個位置。
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-outline" id="closeModalBtn">
-          好啦懂啦 🙈
-        </button>
+  <div class="app">
+    <div class="header">
+      <div class="avatar" id="avatar">💕</div>
+      <div class="header-text">
+        <h1>我們的照片牆</h1>
+        <p id="subtitle">正在從 LINE 取得你的資料...</p>
       </div>
     </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="upload-box">
+      <label class="upload-label" for="file-input">＋ 新增照片</label>
+      <input id="file-input" type="file" accept="image/*" />
+      <small>請從 LINE App 裡開啟，支援手機拍照或從相簿選擇圖片。</small>
+
+      <div class="preview" id="preview">
+        <img id="preview-img" alt="預覽圖片" />
+        <textarea id="preview-text" placeholder="想寫一句話給對方嗎？（可空白）"></textarea>
+        <button id="add-btn" disabled>加入照片牆</button>
+      </div>
+    </div>
+
+    <div class="grid" id="photo-grid"></div>
   </div>
 
-  <!-- Three.js CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
-
   <script>
-    // TODO: 把這個日期改成你們「在一起」的日子（格式：YYYY-MM-DD）
-    const startDate = "2023-01-01";
+    // 把這裡換成你後台看到的 LIFF ID [web:45][web:90]
+    const LIFF_ID = '2008662868-yAm8omQe';
 
-    function calculateDaysTogether() {
-      const start = new Date(startDate + "T00:00:00");
+    const avatarDiv = document.getElementById('avatar');
+    const subtitleEl = document.getElementById('subtitle');
+    const statusEl = document.getElementById('status');
+    const fileInput = document.getElementById('file-input');
+    const preview = document.getElementById('preview');
+    const previewImg = document.getElementById('preview-img');
+    const previewText = document.getElementById('preview-text');
+    const addBtn = document.getElementById('add-btn');
+    const photoGrid = document.getElementById('photo-grid');
+
+    let currentImageUrl = null;
+    let currentUser = null;
+
+    async function initLiff() {
+      try {
+        statusEl.textContent = '初始化 LIFF 中...';
+
+        await liff.init({ liffId: LIFF_ID }); // 官方文件建議的初始化方式。[web:45][web:90]
+
+        if (!liff.isLoggedIn()) {
+          statusEl.textContent = '尚未登入 LINE，導向登入頁面...';
+          liff.login();
+          return;
+        }
+
+        const profile = await liff.getProfile(); // 取得 userId、displayName、pictureUrl。[web:27][web:95]
+        currentUser = profile;
+
+        subtitleEl.textContent = `嗨，${profile.displayName}，一起記錄你們的回憶吧 💕`;
+        statusEl.textContent = '已從 LINE 取得你的身份資訊。';
+
+        if (profile.pictureUrl) {
+          avatarDiv.innerHTML = '';
+          const img = document.createElement('img');
+          img.src = profile.pictureUrl;
+          avatarDiv.appendChild(img);
+        }
+
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = 'LIFF 初始化失敗，請確認 LIFF ID 與後台設定是否正確。';
+      }
+    }
+
+    // 本地圖片預覽（不上傳伺服器）[web:101][web:20]
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const url = URL.createObjectURL(file);
+      currentImageUrl = url;
+      previewImg.src = url;
+      preview.style.display = 'block';
+      addBtn.disabled = false;
+    });
+
+    addBtn.addEventListener('click', () => {
+      if (!currentImageUrl) return;
+
+      const text = previewText.value.trim();
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const img = document.createElement('img');
+      img.src = currentImageUrl;
+
+      const textDiv = document.createElement('div');
+      textDiv.className = 'card-text';
+      textDiv.textContent = text || '（什麼都沒寫，但還是很甜。）';
+
+      const meta = document.createElement('div');
+      meta.className = 'card-meta';
+
+      const dateSpan = document.createElement('span');
       const now = new Date();
-      const diffMs = now - start;
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const counterEl = document.getElementById("days-counter");
-      if (diffDays >= 0) {
-        counterEl.innerHTML = diffDays + "<span>天</span>";
-      }
-    }
+      dateSpan.textContent = now.toLocaleString();
 
-    const reasons = [
-      "妳講話的時候，眼睛會亮起來，那個畫面很容易在我腦袋裡重播。",
-      "就算妳自己覺得很普通的一天，我都會覺得，只要有妳，就是特別的一天。",
-      "妳真的很認真在過生活，這件事讓我很佩服，也很想好好守護妳。",
-      "妳笑起來的樣子，很容易把我一天的疲憊直接清空。",
-      "跟妳在一起的時候，我會很自然地想成為更好的人。",
-      "妳有自己的想法，也願意聽別人的想法，這點超級迷人。",
-      "有時候妳不說話，但我還是可以感覺到妳的溫柔。",
-      "妳對在乎的人真的很好，很溫柔，也很願意付出。",
-      "有妳在旁邊的時候，世界好像都比較不那麼可怕。",
-      "妳其實比自己想像的還要值得被珍惜，而我想當那個最認真珍惜妳的人。"
-    ];
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = currentUser
+        ? `${currentUser.displayName} 的回憶`
+        : '我們的回憶';
 
-    function pickRandomReason() {
-      const textEl = document.getElementById("reasonText");
-      const random = reasons[Math.floor(Math.random() * reasons.length)];
-      textEl.style.opacity = 0;
-      setTimeout(() => {
-        textEl.textContent = random;
-        textEl.style.opacity = 1;
-      }, 150);
-    }
+      meta.appendChild(dateSpan);
+      meta.appendChild(tag);
 
-    function setupWishList() {
-      const list = document.getElementById("wishList");
-      list.querySelectorAll("input[type='checkbox']").forEach((checkbox) => {
-        checkbox.addEventListener("change", (e) => {
-          const item = e.target.closest(".wish-item");
-          if (e.target.checked) {
-            item.classList.add("done");
-          } else {
-            item.classList.remove("done");
-          }
-        });
-      });
-    }
+      card.appendChild(img);
+      card.appendChild(textDiv);
+      card.appendChild(meta);
 
-    const modalBackdrop = document.getElementById("modalBackdrop");
-    const secretBtn = document.getElementById("secretBtn");
-    const closeModalBtn = document.getElementById("closeModalBtn");
+      photoGrid.prepend(card);
 
-    secretBtn.addEventListener("click", () => {
-      modalBackdrop.classList.add("show");
+      // 清空預覽
+      previewText.value = '';
+      preview.style.display = 'none';
+      addBtn.disabled = true;
+      currentImageUrl = null;
+      fileInput.value = '';
     });
 
-    closeModalBtn.addEventListener("click", () => {
-      modalBackdrop.classList.remove("show");
-    });
-
-    modalBackdrop.addEventListener("click", (e) => {
-      if (e.target === modalBackdrop) {
-        modalBackdrop.classList.remove("show");
-      }
-    });
-
-    const heartsLayer = document.getElementById("heartsLayer");
-    const celebrateBtn = document.getElementById("celebrateBtn");
-
-    function spawnHearts(durationMs = 2500) {
-      const count = 40;
-      for (let i = 0; i < count; i++) {
-        const heart = document.createElement("div");
-        heart.className = "heart-confetti";
-        heart.style.left = Math.random() * 100 + "vw";
-        heart.style.animationDelay = Math.random() * 2 + "s";
-        heart.style.animationDuration = 3 + Math.random() * 3 + "s";
-        heartsLayer.appendChild(heart);
-        setTimeout(() => heart.remove(), durationMs + 3000);
-      }
-    }
-
-    celebrateBtn.addEventListener("click", () => {
-      spawnHearts();
-    });
-
-    // ===== Three.js 3D 愛心背景 =====
-    function initThreeBg() {
-      const container = document.getElementById("three-bg");
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(
-        45,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        100
-      );
-      camera.position.z = 6;
-
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      container.appendChild(renderer.domElement);
-
-      const ambient = new THREE.AmbientLight(0xffffff, 0.7);
-      scene.add(ambient);
-
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      dirLight.position.set(3, 4, 5);
-      scene.add(dirLight);
-
-      const heartShape = new THREE.Shape();
-      const x = 0, y = 0;
-      heartShape.moveTo(x + 0, y + 0);
-      heartShape.bezierCurveTo(x + 0, y - 0.5, x - 1.2, y - 0.5, x - 1.2, y + 0.3);
-      heartShape.bezierCurveTo(x - 1.2, y + 1.1, x - 0.3, y + 1.7, x + 0, y + 2.1);
-      heartShape.bezierCurveTo(x + 0.3, y + 1.7, x + 1.2, y + 1.1, x + 1.2, y + 0.3);
-      heartShape.bezierCurveTo(x + 1.2, y - 0.5, x + 0, y - 0.5, x + 0, y + 0);
-
-      const extrudeSettings = {
-        depth: 0.6,
-        bevelEnabled: true,
-        bevelSegments: 10,
-        steps: 2,
-        bevelSize: 0.25,
-        bevelThickness: 0.25
-      };
-
-      const geometry = new THREE.ExtrudeGeometry(heartShape, extrudeSettings);
-      geometry.center();
-
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xff5c9a,
-        metalness: 0.3,
-        roughness: 0.25,
-        emissive: 0x220010,
-        emissiveIntensity: 0.35
-      });
-
-      const heartMesh = new THREE.Mesh(geometry, material);
-      heartMesh.scale.set(1.4, 1.4, 1.4);
-      heartMesh.position.set(0.2, 0.4, 0);
-      scene.add(heartMesh);
-
-      const bgGeo = new THREE.SphereGeometry(30, 32, 32);
-      const bgMat = new THREE.MeshBasicMaterial({
-        color: 0xffc1e3,
-        side: THREE.BackSide
-      });
-      const bg = new THREE.Mesh(bgGeo, bgMat);
-      scene.add(bg);
-
-      function onResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      }
-      window.addEventListener("resize", onResize);
-
-      function animate() {
-        requestAnimationFrame(animate);
-        heartMesh.rotation.y += 0.01;
-        heartMesh.rotation.x = Math.sin(Date.now() * 0.0004) * 0.2 + 0.2;
-        renderer.render(scene, camera);
-      }
-      animate();
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      calculateDaysTogether();
-      setupWishList();
-      pickRandomReason();
-      initThreeBg();
-    });
+    document.addEventListener('DOMContentLoaded', initLiff);
   </script>
 </body>
 </html>
